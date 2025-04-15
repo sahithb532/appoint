@@ -32,21 +32,29 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/bookings', require('./routes/bookings'));
 app.use('/api/departments', require('./routes/departments'));
 
-// Determine the correct path for static files
-let staticPath;
-if (process.env.NODE_ENV === 'production') {
-    // In production, serve from the public directory inside backend
-    staticPath = path.join(__dirname, 'public');
-    // Create public directory if it doesn't exist
-    if (!fs.existsSync(staticPath)) {
-        fs.mkdirSync(staticPath, { recursive: true });
-    }
-} else {
-    // In development, serve from the frontend directory
-    staticPath = path.join(__dirname, '../frontend');
-}
+// Debug information
+console.log('Current directory:', process.cwd());
+console.log('__dirname:', __dirname);
+console.log('NODE_ENV:', process.env.NODE_ENV);
 
-console.log('Serving static files from:', staticPath);
+// Determine the correct path for static files
+const staticPath = path.join(process.cwd(), 'frontend');
+console.log('Static path:', staticPath);
+
+// Check if the static directory exists
+if (fs.existsSync(staticPath)) {
+    console.log('Static directory exists');
+    console.log('Contents of static directory:', fs.readdirSync(staticPath));
+} else {
+    console.error('Static directory does not exist:', staticPath);
+    // Try alternative path
+    const altPath = path.join(__dirname, '../frontend');
+    console.log('Trying alternative path:', altPath);
+    if (fs.existsSync(altPath)) {
+        console.log('Alternative path exists');
+        console.log('Contents of alternative directory:', fs.readdirSync(altPath));
+    }
+}
 
 // Serve static files
 app.use(express.static(staticPath));
@@ -59,8 +67,15 @@ app.get('*', (req, res) => {
     if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
     } else {
-        console.error('index.html not found at:', indexPath);
-        res.status(404).json({ error: 'File not found' });
+        // Try alternative path
+        const altIndexPath = path.join(__dirname, '../frontend', 'index.html');
+        console.log('Trying alternative path:', altIndexPath);
+        if (fs.existsSync(altIndexPath)) {
+            res.sendFile(altIndexPath);
+        } else {
+            console.error('index.html not found at either location');
+            res.status(404).json({ error: 'File not found' });
+        }
     }
 });
 
@@ -73,5 +88,4 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
-    console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
 }); 
