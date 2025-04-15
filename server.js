@@ -31,12 +31,19 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/bookings', require('./routes/bookings'));
 app.use('/api/departments', require('./routes/departments'));
 
+// Determine the correct path for static files
+const staticPath = process.env.NODE_ENV === 'production' 
+    ? path.join(__dirname, '..', 'frontend')
+    : path.join(__dirname, '../frontend');
+
+console.log('Serving static files from:', staticPath);
+
 // Serve static files
-app.use(express.static(path.join(__dirname, '../frontend')));
+app.use(express.static(staticPath));
 
 // Handle all other routes by serving index.html
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
+    res.sendFile(path.join(staticPath, 'index.html'));
 });
 
 // Error handling middleware
@@ -48,4 +55,5 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+    console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
 }); 
