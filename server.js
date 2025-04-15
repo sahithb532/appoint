@@ -32,22 +32,21 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/bookings', require('./routes/bookings'));
 app.use('/api/departments', require('./routes/departments'));
 
-// Debug: Log current directory and environment
-console.log('Current directory:', process.cwd());
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('__dirname:', __dirname);
-
 // Determine the correct path for static files
-const staticPath = path.join(process.cwd(), 'frontend');
-console.log('Static path:', staticPath);
-
-// Check if the static directory exists
-if (fs.existsSync(staticPath)) {
-    console.log('Static directory exists');
-    console.log('Contents of static directory:', fs.readdirSync(staticPath));
+let staticPath;
+if (process.env.NODE_ENV === 'production') {
+    // In production, serve from the public directory inside backend
+    staticPath = path.join(__dirname, 'public');
+    // Create public directory if it doesn't exist
+    if (!fs.existsSync(staticPath)) {
+        fs.mkdirSync(staticPath, { recursive: true });
+    }
 } else {
-    console.error('Static directory does not exist:', staticPath);
+    // In development, serve from the frontend directory
+    staticPath = path.join(__dirname, '../frontend');
 }
+
+console.log('Serving static files from:', staticPath);
 
 // Serve static files
 app.use(express.static(staticPath));
@@ -74,4 +73,5 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+    console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
 }); 
